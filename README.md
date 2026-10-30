@@ -12,7 +12,7 @@
 ## 公開（GitHub Pages）
 
 Settings → Pages で「Deploy from a branch」→ ブランチ `main`・フォルダ `/ (root)` を選ぶと、
-`https://yaoshishensota11-byte.github.io/mogiten-tantei/` で公開されます。
+`https://mogiten-tantei.github.io/` で公開されます。
 
 ## プライバシー
 
