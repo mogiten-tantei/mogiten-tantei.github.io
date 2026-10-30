@@ -359,6 +359,174 @@ input.txt:focus{outline:calc(4 * var(--k)) solid rgba(217,72,15,.35);border-colo
 .modal .receipt{width:calc(720 * var(--k));text-align:center;display:flex;flex-direction:column;gap:calc(18 * var(--k));padding:calc(30 * var(--k))}
 .modal .mt{font-size:var(--f40);font-weight:900;display:flex;align-items:center;justify-content:center;gap:.35em}
 
+/* ===== スマホモード（幅600px未満、または高さ500px未満＝スマホ横向き） =====
+ * PC・タブレット用の規則はそのまま。ここでだけ上書きする。
+ * 1280×720 比例の拡縮はやめて固定サイズ：本文16px以上、金額・数字22px、ボタン高さ48px。
+ * 1画面固定ではなく縦スクロール。各画面の主ボタンは画面下の操作バーに固定する。 */
+@media (max-width: 599px), (max-height: 499px){
+  body,.scr{
+    --k:.6px;
+    --f28:16px; --f32:17px; --f36:18px; --f40:20px; --f48:22px; --f56:24px; --f64:28px;
+  }
+  html,body{height:auto;overflow:visible}
+  body{line-height:1.4}
+  #studentRoot{position:relative;inset:auto;min-height:100vh;min-height:100dvh;overflow:visible}
+
+  /* ヘッダー（小さく） */
+  .top{height:48px;gap:10px;padding:0 max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left));border-bottom-width:2px}
+  .brand{height:44px;min-width:44px;justify-content:center;gap:6px;padding:0 .1em}
+  .brand svg{width:32px;height:32px}
+  .days{gap:.15em}
+  .days span{padding:0 .35em}
+  .dots{gap:5px}
+  .dot{width:9px;height:9px;border-width:2px}
+
+  /* ステージ：縦スクロール。下に操作バーの分の余白 */
+  #stage{display:block;padding:12px max(16px, env(safe-area-inset-right)) calc(96px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left))}
+  .scr{overflow:visible;max-width:720px;gap:12px}
+  .grow{justify-content:flex-start;gap:12px}
+  .hrow{flex-wrap:wrap;gap:8px 12px}
+  .h2{gap:.3em}
+
+  /* 主ボタンの操作バー（画面下に固定） */
+  .scr > .actions, .foot > .actions, .wcol > .actions{
+    position:fixed; left:0; right:0; bottom:0; z-index:40; flex-wrap:nowrap; gap:10px;
+    padding:8px max(16px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    background:rgba(246,239,226,.97); border-top:2px dashed var(--line); box-shadow:0 -4px 12px rgba(31,42,68,.08);
+  }
+  .scr > .actions .btn, .foot > .actions .btn, .wcol > .actions .btn{flex:1 1 0;min-width:0;max-width:400px;white-space:normal;text-align:center}
+  .scr > .actions .btn.sec, .foot > .actions .btn.sec, .wcol > .actions .btn.sec{flex:0 1 auto}
+  .scr > .actions .btn:disabled, .foot > .actions .btn:disabled{opacity:1;background:#c9c3b6;border-color:#c9c3b6;color:#5f6676}
+
+  /* ボタン・入力（高さ44px以上） */
+  .btn{min-height:48px;padding:.25em .9em;border-width:2px;box-shadow:0 3px 0 rgba(31,42,68,.35)}
+  .btn.hot{box-shadow:0 3px 0 #8f2f09}
+  .btn.big{min-height:50px}
+  .linkbtn{min-height:44px}
+  input.txt{min-height:48px;border-width:2px}
+  .actions{gap:10px}
+
+  /* P0 タイトル */
+  .p0{justify-content:flex-start;gap:16px;padding-top:4px}
+  .p0-hero{gap:14px}
+  .p0-hero .logo{width:76px;height:76px;flex:none}
+  .p0-hero h1{font-size:30px;letter-spacing:.04em}
+  .p0-hero .kick{margin-bottom:4px}
+  .p0-form{width:100%;max-width:480px;gap:10px;padding:16px}
+  .p0 .actions .btn{flex:1 1 auto}
+
+  /* SEL：1セット＝1枚のカード */
+  .sethead{display:none}
+  .setlist{gap:10px}
+  .setrow{grid-template-columns:36px 1fr 28px;grid-template-rows:auto auto;gap:6px 10px;padding:10px 12px;align-items:start;border-width:2px}
+  .setrow > .setno{grid-row:1 / 3;grid-column:1;align-self:center}
+  .setrow > .setcell:nth-child(2){grid-row:1;grid-column:2}
+  .setrow > .setcell:nth-child(3){grid-row:2;grid-column:2;border-top:1px dashed var(--line);padding-top:6px}
+  .setrow > .selck{grid-row:1 / 3;grid-column:3;align-self:center;width:28px;height:28px;border-width:2px}
+  .setcell[data-h]::before{content:attr(data-h);display:block;font-size:14px;font-weight:900;color:var(--ink-soft);line-height:1.3}
+  .setti{line-height:1.3}
+  .sellearn{line-height:1.3}
+
+  /* P1 */
+  .p1-grid{grid-template-columns:1fr;gap:12px}
+  .p1-ill{width:100%;max-width:200px;margin:0 auto}
+  .p1 h2{margin:4px 0}
+
+  /* 振り分け（P2・P6） */
+  .how{flex-wrap:wrap;gap:4px 12px;justify-content:flex-start}
+  .how .hw{word-break:keep-all;overflow-wrap:anywhere}
+  .deck{gap:8px;padding:8px;min-height:64px;border-width:2px}
+  .tcard{min-height:48px;padding:6px 12px;max-width:100%;border-width:2px;border-left-width:8px;-webkit-touch-callout:none}
+  .tcard.sel{outline-width:3px}
+  .startbox{flex-wrap:wrap;gap:4px 10px;padding:6px 10px;border-width:2px}
+  .bins{gap:10px}
+  .bin{min-height:110px;padding:8px;gap:6px;border-width:2px}
+  .bin .bh{gap:.3em;line-height:1.25}
+  .bin .bn{margin-top:-2px;line-height:1.3}
+  .tcard.in{flex-direction:column;align-items:flex-start;gap:0;padding:4px 8px}
+  .foot{flex-direction:column;align-items:stretch;gap:10px}
+  .formula,.info{min-height:48px;padding:6px 12px;border-width:2px}
+
+  /* P3：あるべき数と実際の数を縦に */
+  .p3row{flex-direction:column;gap:10px}
+  .p3row > .calc{flex:none}
+  .cmp{grid-template-columns:1fr;gap:4px}
+  .cmp .neq{justify-self:center;line-height:1}
+  .diff{flex-wrap:wrap}
+  .diff .ring{border-width:3px;padding:0 .7em}
+  .line{gap:.6em}
+
+  /* P4：手がかりカードを縦に */
+  .clues{grid-template-columns:1fr;gap:10px}
+  .clue{min-height:88px;padding:12px;border-width:2px}
+
+  /* P5：選択肢を縦に */
+  .p5grid{grid-template-columns:1fr;gap:12px}
+  .choice{min-height:48px;padding:8px 12px;border-width:2px}
+  .hint,.truth{border-left-width:6px;padding:8px 12px}
+
+  /* P6 */
+  .steps{gap:6px}
+  .steps i{width:26px;height:8px;border-radius:4px}
+  .entry{grid-template-columns:1fr;border-width:2px}
+  .entry > :nth-child(1){order:1}
+  .entry > :nth-child(3){order:2}
+  .entry > :nth-child(2){order:3}
+  .entry > :nth-child(4){order:4}
+  .entry .cell + .cell, .entry .hd + .hd{border-left:0}
+  .entry .cell{padding:8px 12px}
+  .p6c{grid-template-columns:1fr;gap:12px}
+  .total{border-width:2px;padding:12px}
+  .lesson{padding:12px 16px;line-height:1.4}
+  .stamp{border-width:2px}
+
+  /* W：ランクとおまけ問題を縦に */
+  .wgrid{grid-template-columns:1fr;gap:12px}
+  .bonus .choice{min-height:48px;padding:6px 12px}
+
+  /* P7・P9：バッジは小さめ */
+  .p7{justify-content:flex-start}
+  .badge{width:120px;height:120px}
+  .promo{gap:.4em}
+  .p9{justify-content:flex-start}
+  .p9top{gap:16px;flex-wrap:wrap;justify-content:center}
+  .p9 .badge{width:90px;height:90px}
+  .lessons{grid-template-columns:1fr;gap:12px}
+
+  /* F1・F2：比較表を選択肢ごとのカードに */
+  .fpopts{gap:10px}
+  .fpopts .choice{min-height:52px}
+  .tbl, .tbl tbody, .tbl tr, .tbl td{display:block;width:auto}
+  .tbl{border:0;background:none;overflow:visible}
+  .tbl thead{display:none}
+  .tbl tbody{display:flex;flex-direction:column;gap:10px}
+  .tbl tr{background:var(--card);border:2px solid var(--ink);border-radius:.3em;overflow:hidden}
+  .tbl th:first-child,.tbl td:first-child{width:auto}
+  .tbl th,.tbl td{padding:8px 12px}
+  .tbl tr td{border-bottom:1px dashed var(--line)}
+  .tbl tr td:last-child{border-bottom:0}
+  .tbl td:first-child{border-bottom:2px solid var(--line)}
+  .tbl tr.me{border-color:var(--accent)}
+  .tbl tr.me td:first-child{box-shadow:inset 6px 0 0 var(--accent)}
+  .tbl td[data-h]::before{content:attr(data-h);display:block;font-size:14px;font-weight:900;color:var(--ink-soft);line-height:1.3}
+  .fplesson{padding:14px 16px}
+
+  /* 確認ダイアログ */
+  .modal{padding:16px}
+  .modal .receipt{width:100%;max-width:440px;padding:20px 16px;gap:14px}
+  .modal .actions .btn{flex:1 1 auto}
+}
+/* スマホ横向き（高さが低い）：幅はあるので一部は横に並べたまま */
+@media (max-height: 499px) and (min-width: 600px){
+  .clues{grid-template-columns:repeat(var(--n,3),1fr)}
+  .p1-grid{grid-template-columns:180px 1fr;align-items:start}
+  .p1-ill{max-width:180px}
+}
+/* 狭い幅のゲーム中ヘッダー：ロゴだけ表示（「模擬店探偵」の文字は読み上げ用に残す） */
+@media (max-width: 439px){
+  #toTitle > span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+}
+
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation:none !important;transition:none !important}
 }
@@ -724,6 +892,13 @@ function bindSort(root, def, placed, onDone){
       if (st.moved){
         st.ghost.style.left = (e.clientX - st.ox)+"px"; st.ghost.style.top = (e.clientY - st.oy)+"px";
         var el = document.elementFromPoint(e.clientX, e.clientY), bin = el && el.closest(".bin");
+        // スマホ：箱の外で画面の上端・下端までドラッグしたら少しずつスクロール（箱が画面外でも届くように）
+        if (!bin && isPhone()){
+          var edge = 60, barEl = document.querySelector(".scr > .actions, .foot > .actions, .wcol > .actions");
+          var bottom = barEl && getComputedStyle(barEl).position === "fixed" ? barEl.getBoundingClientRect().top : innerHeight;
+          if (e.clientY > bottom - edge) window.scrollBy(0, 14);
+          else if (e.clientY < edge) window.scrollBy(0, -14);
+        }
         if (st.over && st.over !== bin) st.over.classList.remove("over");
         if (bin) bin.classList.add("over");
         st.over = bin;
@@ -806,19 +981,20 @@ function caseSets(){
 S.SEL = function(){
   var sets = caseSets();
   if (ui.pickSet == null && sets.length) ui.pickSet = sets[0].no;
-  function cell(c){
-    return '<span class="setcell"><span class="setti">'+esc(c.title)+(c.fp ? '<span class="tag ink">FP：'+esc(c.fp.topic || "お金の使い方")+'</span>' : '')+'</span>'+
+  var HEADS = ["1日目（初級）", "2日目（上級）"];
+  function cell(c, hi){
+    return '<span class="setcell" data-h="'+esc(HEADS[hi])+'"><span class="setti">'+esc(c.title)+(c.fp ? '<span class="tag ink">FP：'+esc(c.fp.topic || "お金の使い方")+'</span>' : '')+'</span>'+
       (c.learn ? '<span class="sellearn">'+I.check+esc(c.learn)+'</span>' : '')+'</span>';
   }
   var rows = sets.map(function(st){
     var on = String(ui.pickSet) === String(st.no);
     return '<button class="setrow'+(on?" on":"")+'" data-set="'+esc(st.no)+'" aria-pressed="'+on+'">'+
-      '<span class="setno num">'+esc(st.no)+'</span>'+cell(st.c1)+cell(st.c2)+
+      '<span class="setno num">'+esc(st.no)+'</span>'+cell(st.c1, 0)+cell(st.c2, 1)+
       '<span class="selck">'+(on?I.check:"")+'</span></button>';
   }).join("");
   var html = '<div class="scr sel"><div class="h2">'+I.lens+'どの事件を捜査する？</div>'+
     '<div class="grow"><div class="setlist">'+
-      '<div class="sethead"><span></span><span>1日目（初級）</span><span>2日目（上級）</span><span></span></div>'+rows+
+      '<div class="sethead"><span></span><span>'+esc(HEADS[0])+'</span><span>'+esc(HEADS[1])+'</span><span></span></div>'+rows+
     '</div></div>'+
     '<div class="actions"><button class="btn sec" id="selBack">もどる</button>'+
     '<button class="btn big hot" id="selGo">'+I.lens+'この事件で捜査開始</button></div></div>';
@@ -1044,13 +1220,13 @@ S.F1 = function(c){
 S.F2 = function(c){
   var fp = c.fp, body, acts;
   if (!ui.sub){
+    var sc = fp.scenarios || ["晴れのとき", "雨のとき"];
     var rows = fp.options.map(function(o){
       var me = o.key === state.fp;
       return '<tr class="'+(me?"me":"")+'"><td>'+(me?'<span class="you">あなた</span>':'')+'<span class="keyc">'+esc(o.key)+'</span>'+esc(o.text)+'</td>'+
-        '<td><div class="m num">'+fmt(o.sunny.money)+'円</div><div class="r">'+esc(o.sunny.result)+'</div></td>'+
-        '<td><div class="m num">'+fmt(o.rainy.money)+'円</div><div class="r">'+esc(o.rainy.result)+'</div></td></tr>';
+        '<td data-h="'+esc(sc[0])+'"><div class="m num">'+fmt(o.sunny.money)+'円</div><div class="r">'+esc(o.sunny.result)+'</div></td>'+
+        '<td data-h="'+esc(sc[1])+'"><div class="m num">'+fmt(o.rainy.money)+'円</div><div class="r">'+esc(o.rainy.result)+'</div></td></tr>';
     }).join("");
-    var sc = fp.scenarios || ["晴れのとき", "雨のとき"];
     body = '<table class="tbl"><thead><tr><th>使い道</th><th>'+esc(sc[0])+'</th><th>'+esc(sc[1])+'</th></tr></thead><tbody>'+rows+'</tbody></table>';
     acts = '<button class="btn sec" id="pv">選びなおす</button><button class="btn big" id="nx">次へ'+I.arrow+'</button>';
   } else {
@@ -1080,6 +1256,10 @@ S.P9 = function(){
 };
 
 /* ============ 描画・自動縮小 ============ */
+// スマホモード：幅600px未満、または高さ500px未満（スマホ横向き）。CSSの @media と同じ条件
+var PHONE_MQ = window.matchMedia ? window.matchMedia("(max-width: 599px), (max-height: 499px)") : null;
+function isPhone(){ return !!(PHONE_MQ && PHONE_MQ.matches); }
+var lastView = "";
 // 金額・数字だけの文字は大きく（48px基準）：データ由来の文字にも自動で付ける
 var NUMONLY = /^[0-9０-９,，\s＋－−＝×÷+\-=円個点回％%\/]+$/, HASDIGIT = /[0-9０-９]/;
 function markNums(root){
@@ -1095,6 +1275,7 @@ function markNums(root){
 function fit(){
   var s = $("#stage .scr"); if (!s) return;
   var f = 1; s.style.setProperty("--fit", f);
+  if (isPhone()) return;   // スマホは固定サイズの文字＋縦スクロール（縮めない）
   var guard = 0;
   function over(){
     if (s.scrollHeight > s.clientHeight + 1 || s.scrollWidth > s.clientWidth + 1) return true;
@@ -1120,10 +1301,17 @@ function render(){
   if (out.bind) out.bind(stage);
   markNums(stage);
   fit();
+  // 画面（または P6 の段階・F2 の表示）が変わったら、スクロールを先頭にもどす（スマホは縦スクロールするため）
+  var view = ui.view + "/" + (state && ui.view === "game" ? state.screen + "/" + state.dayIdx + "/" + (state.screen === "P6" ? day().p6step : "") + "/" + ui.sub : "");
+  if (view !== lastView){ lastView = view; if (window.scrollY) window.scrollTo(0, 0); }
 }
 
 var rt;
 window.addEventListener("resize", function(){ clearTimeout(rt); rt = setTimeout(fit, 80); });
+if (PHONE_MQ){
+  var onMQ = function(){ clearTimeout(rt); fit(); };
+  if (PHONE_MQ.addEventListener) PHONE_MQ.addEventListener("change", onMQ); else if (PHONE_MQ.addListener) PHONE_MQ.addListener(onMQ);
+}
 render();
 })();
 </script>
