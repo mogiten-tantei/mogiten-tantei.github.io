@@ -412,3 +412,10 @@ td.num, th.num { text-align: right; white-space: nowrap; font-weight: 800; }
 @media (max-width: 360px) {
   .header-play .icon { display: none; }
 }
+
+/* ===== 読みやすい改行 =====
+   日本語は文節の切れ目（tools/phrase_wrap.py が入れた <wbr>）だけで改行する。
+   見出しは行の長さをそろえ、本文は最後の行に1〜2文字だけ残らないようにする。 */
+body { word-break: keep-all; overflow-wrap: anywhere; line-break: strict; }
+h1, h2, h3, h4, .lead, summary, figcaption, .btn { text-wrap: balance; }
+p, li, dd, td, th { text-wrap: pretty; }
