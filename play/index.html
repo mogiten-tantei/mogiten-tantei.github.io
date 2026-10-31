@@ -270,6 +270,21 @@ input.txt:focus{outline:calc(4 * var(--k)) solid rgba(217,72,15,.35);border-colo
 .truth{border-left:calc(10 * var(--k)) solid var(--ok);background:#eef7ef;padding:calc(8 * var(--k)) calc(16 * var(--k));border-radius:.2em;line-height:1.3;font-weight:700}
 .truth .tt{font-weight:900;color:var(--ok);display:flex;align-items:center;gap:.3em}
 
+/* ===== 事件のなぞ（P4・P5） ===== */
+.qcard{background:var(--card);border:calc(3 * var(--k)) solid var(--ink);border-radius:.3em;padding:calc(6 * var(--k)) calc(14 * var(--k));display:flex;flex-direction:column;gap:calc(4 * var(--k))}
+.qrow{display:flex;align-items:center;gap:.5em}
+.qk,.tk{flex:none;background:var(--ink);color:var(--card);font-weight:900;padding:0 .45em;border-radius:.25em;font-size:var(--f28)}
+.tk{background:var(--gold);color:var(--ink);margin-right:.4em}
+.qt{flex:1 1 auto;font-weight:900;font-size:var(--f32);line-height:1.25}
+.qmore{flex:none;min-height:calc(52 * var(--k));padding:0 calc(14 * var(--k));font-size:var(--f28)}
+.think{font-weight:800;line-height:1.3;color:var(--ink)}
+.recap{text-align:left !important}
+.recap ul{margin:0;padding-left:1.2em;font-weight:700;line-height:1.4}
+.recap .rhead{font-weight:900;color:#9a7215}
+.recap .rc{display:flex;flex-wrap:wrap;align-items:baseline;gap:.3em .6em;font-weight:800}
+.recap .rc b{font-size:var(--f40)}
+.recap .qt{border-top:calc(3 * var(--k)) dashed var(--line);padding-top:calc(8 * var(--k))}
+
 /* ===== P6 ===== */
 .steps{display:flex;gap:calc(8 * var(--k));justify-content:center;flex:none}
 .steps i{width:calc(44 * var(--k));height:calc(12 * var(--k));border-radius:calc(6 * var(--k));background:var(--line)}
@@ -464,6 +479,13 @@ input.txt:focus{outline:calc(4 * var(--k)) solid rgba(217,72,15,.35);border-colo
   .p5grid{grid-template-columns:1fr;gap:12px}
   .choice{min-height:48px;padding:8px 12px;border-width:2px}
   .hint,.truth{border-left-width:6px;padding:8px 12px}
+  .qcard{border-width:2px;padding:8px 10px;gap:6px}
+  .qrow{flex-wrap:wrap;gap:6px 8px}
+  .qt{font-size:17px;flex-basis:calc(100% - 60px)}
+  .qk,.tk{font-size:16px}
+  .qmore{min-height:44px;font-size:16px;padding:0 12px}
+  .think{font-size:16px}
+  .recap .rc b{font-size:22px}
 
   /* P6 */
   .steps{gap:6px}
@@ -585,7 +607,19 @@ function save(){ if (state) store.set(KEY(), JSON.stringify(state)); }
 function freshUI(view){ return { view: view, sel: null, msg: "", timers: [], p7at: 0, sub: 0 }; }
 var ui = freshUI(state ? "game" : "title");
 
-function newDay(){ return { startAt:null, endAt:null, clues:0, wrong:0, wrongIdx:[], miss:0, p2:[], p6:[], p6step:0, solved:false, score:null, bonus:null }; }
+function newDay(){ return { startAt:null, endAt:null, clues:0, wrong:0, wrongIdx:[], miss:0, p2:[], p6:[], p6step:0, solved:false, score:null, bonus:null, ord5:null, ordB:null }; }
+// 選択肢の並び順（毎回ランダム。正解がいつも同じ場所にならないように）
+function shuffled(n){ var a = []; for (var i=0;i<n;i++) a.push(i); for (var j=n-1;j>0;j--){ var k = Math.floor(Math.random()*(j+1)), t = a[j]; a[j] = a[k]; a[k] = t; } return a; }
+function orderOf(d, key, n){ if (!d[key] || d[key].length !== n){ d[key] = shuffled(n); save(); } return d[key]; }
+// 推理中ずっと見える「事件のなぞ」と、朝のようすを見直すボタン
+function questionOf(c){ var inc = c.incident, u = inc.unit || "円", diff = inc.actual - inc.expected; return c.question || (inc.item+"が"+fmt(Math.abs(diff))+u+(diff<0?"足りない":"多い")+"。なぜ？"); }
+function qcardHTML(c, withThink){
+  return '<div class="qcard"><div class="qrow"><span class="qk">なぞ</span><span class="qt">'+esc(questionOf(c))+'</span>'+
+    '<button class="btn sec qmore" id="qmore">朝のようす</button></div>'+
+    (withThink && c.think ? '<div class="think"><span class="tk">考え方</span>'+esc(c.think)+'</div>' : '')+'</div>';
+}
+function bindQcard(r, c){ var b = $("#qmore", r); if (b) b.onclick = function(){ recapBox(c); }; }
+
 function newState(name, c1, c2){
   return { v:1, started:true, name:name||"", codes:[c1.code, c2.code], screen:"P1", dayIdx:0, days:[newDay(), newDay()], fp:null };
 }
@@ -789,6 +823,20 @@ function confirmBox(title, sub, okLabel, onOk){
   $("#mOk").onclick = function(){ root.innerHTML = ""; onOk(); };
   markNums(root);
   $("#mNo").focus();
+}
+
+function recapBox(c){
+  var root = $("#modalRoot"), inc = c.incident, u = inc.unit || "円", diff = inc.actual - inc.expected;
+  root.innerHTML = '<div class="modal" role="dialog" aria-modal="true"><div class="receipt recap">'+
+    '<div class="mt">'+I.lens+'事件のおさらい</div>'+
+    '<div class="rhead">朝のようす</div><ul>'+(c.morning||[]).map(function(m){ return '<li>'+esc(m)+'</li>'; }).join("")+'</ul>'+
+    '<div class="rhead">見つかったズレ（'+esc(inc.item)+'）</div>'+
+    '<div class="rc"><span>帳簿では</span><b class="num">'+fmt(inc.expected)+esc(u)+'</b><span>実際は</span><b class="num acc">'+fmt(inc.actual)+esc(u)+'</b></div>'+
+    '<div class="qt">'+esc(questionOf(c))+'</div>'+
+    '<div class="actions"><button class="btn hot" id="mOk">閉じる</button></div></div></div>';
+  $("#mOk").onclick = function(){ root.innerHTML = ""; };
+  markNums(root);
+  $("#mOk").focus();
 }
 
 /* ============ 画面遷移 ============ */
@@ -1062,12 +1110,13 @@ S.P4 = function(c){
     var lock = i > d.clues;
     return '<button class="clue down'+(lock?" lock":"")+'" data-i="'+i+'" '+(lock?'disabled aria-disabled="true"':'')+'><span class="no">手がかり'+CIRC[i]+'</span><span class="q">?</span><span class="cost">'+(i===0?"無料":"ランク点 "+MINUS+"5")+'</span></button>';
   }).join("");
-  var html = '<div class="scr"><div class="h2">'+I.lens+'手がかりを開こう</div>'+
-    '<div class="note">伏せたカードを1枚ずつタップ。1枚目は無料、2枚目からは1枚ごとにランク点'+MINUS+'5。いつでも推理できます。</div>'+
+  var html = '<div class="scr"><div class="h2">'+I.lens+'手がかりを開こう</div>'+qcardHTML(c, true)+
+    '<div class="note">カードをタップして開く。1枚目は無料、2枚目からランク点'+MINUS+'5。</div>'+
     '<div class="grow"><div class="clues" style="--n:'+n+'">'+cards+'</div>'+
     '<div class="count">開いた手がかり：<b class="num">'+d.clues+'</b> / '+n+' 枚</div></div>'+
     '<div class="actions"><button class="btn big hot" id="nx">推理する'+I.arrow+'</button></div></div>';
   return { html:html, bind:function(r){
+    bindQcard(r, c);
     $$(".clue.down:not(.lock)", r).forEach(function(b){ b.onclick = function(){ if (+b.dataset.i === d.clues){ d.clues++; save(); render(); } }; });
     $("#nx", r).onclick = next;
   }};
@@ -1076,14 +1125,14 @@ S.P4 = function(c){
 S.P5 = function(c){
   var d = day(), last = d.wrongIdx.length ? d.wrongIdx[d.wrongIdx.length-1] : -1;
   var opened = c.clues.slice(0, d.clues);
-  var chs = c.choices.map(function(ch,i){
-    var ng = d.wrongIdx.indexOf(i) >= 0, ok = d.solved && ch.correct;
-    return '<button class="choice'+(ng?" ng":"")+(ok?" ok":"")+'" data-i="'+i+'" '+((ng||d.solved)?"disabled":"")+'><span class="k">'+(ok?I.check:ng?I.cross:"ABC".charAt(i))+'</span><span>'+esc(ch.text)+'</span></button>';
+  var chs = orderOf(d, "ord5", c.choices.length).map(function(i, pos){
+    var ch = c.choices[i], ng = d.wrongIdx.indexOf(i) >= 0, ok = d.solved && ch.correct;
+    return '<button class="choice'+(ng?" ng":"")+(ok?" ok":"")+'" data-i="'+i+'" '+((ng||d.solved)?"disabled":"")+'><span class="k">'+(ok?I.check:ng?I.cross:"ABC".charAt(pos))+'</span><span>'+esc(ch.text)+'</span></button>';
   }).join("");
   var fb = "";
   if (d.solved) fb = '<div class="truth"><div class="tt">'+I.check+'真相</div><div>'+esc(c.truth)+'</div></div>';
   else if (last >= 0) fb = '<div class="hint"><span class="acc">'+I.bang+'</span><span>ちょっとちがうみたい。ヒント：'+esc(c.choices[last].hint)+'</span></div>';
-  var html = '<div class="scr"><div class="h2">真相はどれ？</div>'+
+  var html = '<div class="scr"><div class="h2">真相はどれ？</div>'+qcardHTML(c, true)+
     '<div class="grow"><div class="p5grid">'+
       '<div class="mini-clues"><div class="rhead" style="border:0;background:none;padding:0">開いた手がかり</div>'+
         (opened.length ? opened.map(function(cl,i){ return '<div>'+CIRC[i]+' '+esc(cl.text)+'</div>'; }).join("") : '<div class="note">手がかりはまだ開いていません</div>')+'</div>'+
@@ -1091,6 +1140,7 @@ S.P5 = function(c){
     '</div></div>'+
     '<div class="actions">'+(d.solved ? '<button class="btn big" id="nx">正しい記録を見る'+I.arrow+'</button>' : '<button class="btn sec" id="back">'+I.lens+'手がかりにもどる</button>')+'</div></div>';
   return { html:html, bind:function(r){
+    bindQcard(r, c);
     $$(".choice:not([disabled])", r).forEach(function(b){ b.onclick = function(){
       var i = +b.dataset.i;
       if (c.choices[i].correct){ d.solved = true; } else if (d.wrongIdx.indexOf(i) < 0){ d.wrongIdx.push(i); d.wrong++; }
@@ -1168,9 +1218,10 @@ S.W = function(c){
     var ans = d.bonus;
     bonus = '<div class="receipt bonus"><div class="rhead">おまけ問題（ランクには関係なし）</div><div class="rule"></div>'+
       '<div class="q">'+esc(b.question)+'</div><div class="opts">'+
-      b.choices.map(function(ch,i){
+      orderOf(d, "ordB", b.choices.length).map(function(i, pos){
+        var ch = b.choices[i];
         var cls = ans==null ? "" : (i===b.answer ? " ok" : (i===ans ? " ng" : ""));
-        var k = ans==null ? "ABC".charAt(i) : (i===b.answer ? I.check : (i===ans ? I.cross : "ABC".charAt(i)));
+        var k = ans==null ? "ABC".charAt(pos) : (i===b.answer ? I.check : (i===ans ? I.cross : "ABC".charAt(pos)));
         return '<button class="choice'+cls+'" data-i="'+i+'" '+(ans!=null?"disabled":"")+'><span class="k">'+k+'</span><span>'+esc(ch)+'</span></button>';
       }).join("")+'</div>'+
       (ans!=null ? '<div class="exp"><b class="'+(ans===b.answer?"okc":"acc")+'">'+(ans===b.answer?I.check+"正解！":I.bang+"おしい！")+'</b> '+esc(b.explanation)+'</div>' : '')+'</div>';
