@@ -278,6 +278,8 @@ input.txt:focus{outline:calc(4 * var(--k)) solid rgba(217,72,15,.35);border-colo
 .qt{flex:1 1 auto;font-weight:900;font-size:var(--f32);line-height:1.25}
 .qmore{flex:none;min-height:calc(52 * var(--k));padding:0 calc(14 * var(--k));font-size:var(--f28)}
 .think{font-weight:800;line-height:1.3;color:var(--ink)}
+.hrow .qmore{min-height:calc(44 * var(--k))}
+.hrow:has(.qmore){margin-bottom:calc(8 * var(--k))}
 .recap{text-align:left !important}
 .recap ul{margin:0;padding-left:1.2em;font-weight:700;line-height:1.4}
 .recap .rhead{font-weight:900;color:#9a7215}
@@ -483,7 +485,7 @@ input.txt:focus{outline:calc(4 * var(--k)) solid rgba(217,72,15,.35);border-colo
   .qrow{flex-wrap:wrap;gap:6px 8px}
   .qt{font-size:17px;flex-basis:calc(100% - 60px)}
   .qk,.tk{font-size:16px}
-  .qmore{min-height:44px;font-size:16px;padding:0 12px}
+  .qmore,.hrow .qmore{min-height:44px;font-size:16px;padding:0 12px}
   .think{font-size:16px}
   .recap .rc b{font-size:22px}
 
@@ -618,7 +620,8 @@ function qcardHTML(c, withThink){
     '<button class="btn sec qmore" id="qmore">朝のようす</button></div>'+
     (withThink && c.think ? '<div class="think"><span class="tk">考え方</span>'+esc(c.think)+'</div>' : '')+'</div>';
 }
-function bindQcard(r, c){ var b = $("#qmore", r); if (b) b.onclick = function(){ recapBox(c); }; }
+function bindQcard(r, c, noGap){ var b = $("#qmore", r); if (b) b.onclick = function(){ recapBox(c, noGap); }; }
+var MORNING_BTN = '<button class="btn sec qmore" id="qmore">朝のようす</button>';
 
 function newState(name, c1, c2){
   return { v:1, started:true, name:name||"", codes:[c1.code, c2.code], screen:"P1", dayIdx:0, days:[newDay(), newDay()], fp:null };
@@ -825,14 +828,14 @@ function confirmBox(title, sub, okLabel, onOk){
   $("#mNo").focus();
 }
 
-function recapBox(c){
+function recapBox(c, noGap){
   var root = $("#modalRoot"), inc = c.incident, u = inc.unit || "円", diff = inc.actual - inc.expected;
   root.innerHTML = '<div class="modal" role="dialog" aria-modal="true"><div class="receipt recap">'+
     '<div class="mt">'+I.lens+'事件のおさらい</div>'+
     '<div class="rhead">朝のようす</div><ul>'+(c.morning||[]).map(function(m){ return '<li>'+esc(m)+'</li>'; }).join("")+'</ul>'+
-    '<div class="rhead">見つかったズレ（'+esc(inc.item)+'）</div>'+
+    (noGap ? '' : '<div class="rhead">見つかったズレ（'+esc(inc.item)+'）</div>'+
     '<div class="rc"><span>帳簿では</span><b class="num">'+fmt(inc.expected)+esc(u)+'</b><span>実際は</span><b class="num acc">'+fmt(inc.actual)+esc(u)+'</b></div>'+
-    '<div class="qt">'+esc(questionOf(c))+'</div>'+
+    '<div class="qt">'+esc(questionOf(c))+'</div>')+
     '<div class="actions"><button class="btn hot" id="mOk">閉じる</button></div></div></div>';
   $("#mOk").onclick = function(){ root.innerHTML = ""; };
   markNums(root);
@@ -1078,11 +1081,11 @@ S.P1 = function(c){
 
 S.P2 = function(c){
   var d = day(), def = c.sort, done = d.p2.length === def.cards.length;
-  var html = '<div class="scr"><div class="h2">'+esc(def.title || "取引を仕分けよう")+'</div>'+
+  var html = '<div class="scr"><div class="hrow"><div class="h2">'+esc(def.title || "取引を仕分けよう")+'</div>'+MORNING_BTN+'</div>'+
     '<div class="grow">'+sortHTML(def, d.p2, "signed")+'</div>'+
     '<div class="foot"><div class="formula'+(done?" done":"")+'">'+formulaHTML(def, d.p2)+'</div>'+
     '<div class="actions"><button class="btn big" id="nx" '+(done?"":"disabled")+'>次へ'+I.arrow+'</button></div></div></div>';
-  return { html:html, bind:function(r){ bindSort(r, def, d.p2); $("#nx", r).onclick = next; } };
+  return { html:html, bind:function(r){ bindQcard(r, c, true); bindSort(r, def, d.p2); $("#nx", r).onclick = next; } };
 };
 
 S.P3 = function(c){
@@ -1092,7 +1095,7 @@ S.P3 = function(c){
     calc = '<div class="receipt calc">'+inc.calc.map(function(l){ return '<div class="line"><span>'+esc(l.label)+'</span><span class="num">'+signed(l.amount)+esc(u)+'</span></div>'; }).join("")+
       '<div class="line tot"><span>あるべき数</span><span class="num">'+fmt(inc.expected)+esc(u)+'</span></div></div>';
   }
-  var html = '<div class="scr"><div class="h2">'+I.bang+'ズレを発見！<span class="tag ink">'+esc(inc.item)+'</span></div>'+
+  var html = '<div class="scr"><div class="hrow"><div class="h2">'+I.bang+'ズレを発見！<span class="tag ink">'+esc(inc.item)+'</span></div>'+MORNING_BTN+'</div>'+
     '<div class="grow"><div class="p3row">'+calc+
     '<div class="cmp"><div class="box receipt"><div class="lb">帳簿（ちょうぼ＝記録ノート）では</div><div class="v num">'+fmt(inc.expected)+esc(u)+'</div><div class="note">あるべき'+(u==="円"?"金額":"数")+'</div></div>'+
       '<div class="neq">≠</div>'+
@@ -1100,7 +1103,7 @@ S.P3 = function(c){
     '<div class="diff">'+I.bang+'<span class="ring">ズレ<span class="num">'+signed(diff)+esc(u)+'</span></span></div>'+
     '<div class="bigmsg">'+esc(inc.message||"")+'</div></div>'+
     '<div class="actions"><button class="btn big" id="nx">'+I.lens+'手がかりを探す</button></div></div>';
-  return { html:html, bind:function(r){ $("#nx", r).onclick = next; } };
+  return { html:html, bind:function(r){ bindQcard(r, c); $("#nx", r).onclick = next; } };
 };
 
 S.P4 = function(c){
@@ -1197,10 +1200,11 @@ S.P6 = function(c){
   var last = d.p6step === steps.length-1;
   var acts = '<div class="actions">'+(d.p6step>0 ? '<button class="btn sec" id="pv">もどる</button>' : '')+
     (last ? '<button class="btn big hot" id="solve">'+I.check+'事件解決！</button>' : '<button class="btn big" id="nx" '+(canNext?"":"disabled")+'>次へ'+I.arrow+'</button>')+'</div>';
-  var html = '<div class="scr"><div class="hrow"><div class="h2">'+esc(title)+'</div><div class="steps">'+bar+'</div></div>'+
+  var html = '<div class="scr"><div class="hrow"><div class="h2">'+esc(title)+'</div><div class="steps">'+bar+'</div>'+MORNING_BTN+'</div>'+
     '<div class="grow">'+body+'</div>'+
     (info ? '<div class="foot">'+info+acts+'</div>' : acts)+'</div>';
   return { html:html, bind:function(r){
+    bindQcard(r, c);
     if (step === "sort") bindSort(r, rec.sort, d.p6);
     if ($("#pv", r)) $("#pv", r).onclick = function(){ d.p6step--; ui.msg=""; save(); render(); };
     if ($("#nx", r)) $("#nx", r).onclick = function(){ d.p6step++; ui.msg=""; ui.sel=null; save(); render(); };
