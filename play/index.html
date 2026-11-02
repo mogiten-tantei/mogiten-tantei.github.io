@@ -31,6 +31,8 @@ body,.scr{
 html,body{height:100%;overflow:hidden}
 body{
   font-family:var(--font); color:var(--ink); line-height:1.3; font-size:var(--f28);
+  /* 文節の切れ目（ゼロ幅スペース）でだけ改行。入りきらないときだけ、どこでも折り返す */
+  word-break:keep-all; overflow-wrap:anywhere; line-break:strict;
   background-color:var(--paper);
   background-image:
     radial-gradient(circle at 20% 10%, rgba(255,255,255,.45), transparent 40%),
@@ -167,16 +169,17 @@ input.txt:focus{outline:calc(4 * var(--k)) solid rgba(217,72,15,.35);border-colo
 .case-no{font-weight:800;color:var(--ink-soft);display:flex;align-items:center;gap:.5em}
 
 /* ===== 振り分け ===== */
-.sortwrap{display:flex;flex-direction:column;gap:calc(10 * var(--k))}
+.sortwrap{display:flex;flex-direction:column;gap:calc(6 * var(--k))}
 .how{display:flex;align-items:center;justify-content:space-between;gap:1em;color:var(--ink-soft);font-weight:700}
 .how .hw{display:flex;align-items:center;gap:.35em}
 .how .acc{font-weight:900}
-.deck{display:flex;flex-wrap:wrap;gap:calc(12 * var(--k));justify-content:center;align-items:stretch;min-height:calc(90 * var(--k));padding:calc(8 * var(--k));border:calc(3 * var(--k)) dashed var(--line);border-radius:.3em;background:rgba(255,253,248,.35)}
+.deck{display:flex;flex-wrap:wrap;gap:calc(12 * var(--k));justify-content:center;align-items:stretch;min-height:calc(90 * var(--k));padding:calc(4 * var(--k)) calc(8 * var(--k));border:calc(3 * var(--k)) dashed var(--line);border-radius:.3em;background:rgba(255,253,248,.35)}
 .deck .empty{align-self:center}
+.deck.done{min-height:0;padding:calc(4 * var(--k))}
 .tcard{
   touch-action:none; user-select:none; -webkit-user-select:none;
   background:var(--card); border:calc(3 * var(--k)) solid var(--line); border-left:calc(12 * var(--k)) solid var(--gold);
-  border-radius:.25em; padding:calc(4 * var(--k)) calc(16 * var(--k)); display:flex; flex-direction:column; align-items:flex-start; justify-content:center;
+  border-radius:.25em; padding:calc(2 * var(--k)) calc(16 * var(--k)); display:flex; flex-direction:column; align-items:flex-start; justify-content:center;
   min-height:calc(64 * var(--k)); cursor:grab; text-align:left; box-shadow:0 calc(3 * var(--k)) 0 rgba(31,42,68,.12);
 }
 .tcard .lb{font-size:var(--f28);font-weight:800;line-height:1.25}
@@ -194,7 +197,7 @@ input.txt:focus{outline:calc(4 * var(--k)) solid rgba(217,72,15,.35);border-colo
 .bins{display:grid;grid-template-columns:1fr 1fr;gap:calc(16 * var(--k))}
 .bin{
   border:calc(4 * var(--k)) solid var(--ink); border-radius:.35em; background:rgba(255,253,248,.7);
-  min-height:calc(130 * var(--k)); padding:calc(8 * var(--k)) calc(12 * var(--k)); display:flex; flex-direction:column; gap:calc(8 * var(--k)); cursor:pointer;
+  min-height:calc(100 * var(--k)); padding:calc(8 * var(--k)) calc(12 * var(--k)); display:flex; flex-direction:column; gap:calc(8 * var(--k)); cursor:pointer;
   transition:background .15s, transform .15s;
 }
 .bin.ready{border-style:dashed;background:rgba(217,72,15,.06)}
@@ -566,6 +569,7 @@ input.txt:focus{outline:calc(4 * var(--k)) solid rgba(217,72,15,.35);border-colo
 </div>
 
 <script src="data/cases.js"></script>
+<script src="data/phrases.js"></script>
 <script>
 (function(){
 "use strict";
@@ -828,6 +832,7 @@ function confirmBox(title, sub, okLabel, onOk){
     '<div class="actions"><button class="btn sec" id="mNo">やめる</button><button class="btn hot" id="mOk">'+esc(okLabel)+'</button></div></div></div>';
   $("#mNo").onclick = function(){ root.innerHTML = ""; };
   $("#mOk").onclick = function(){ root.innerHTML = ""; onOk(); };
+  wrapJa(root);
   markNums(root);
   $("#mNo").focus();
 }
@@ -842,6 +847,7 @@ function recapBox(c, noGap){
     '<div class="qt">'+esc(questionOf(c))+'</div>')+
     '<div class="actions"><button class="btn hot" id="mOk">閉じる</button></div></div></div>';
   $("#mOk").onclick = function(){ root.innerHTML = ""; };
+  wrapJa(root);
   markNums(root);
   $("#mOk").focus();
 }
@@ -905,10 +911,11 @@ function sortHTML(def, placed, mode){
       (mode==="bins" ? '<div class="bt">計<span class="num">'+fmt(sum)+'円</span></div>' : '')+'</div>';
   }).join("");
   var left = def.cards.length - placed.length;
+  // 全部仕分けたら、操作の案内とカード置き場は小さくする（箱と計算を1画面に収めるため）
   return '<div class="sortwrap">'+start+
-    '<div class="how"><span class="hw'+(ui.msg?" acc":"")+'" aria-live="polite">'+(ui.msg ? I.bang+esc(ui.msg) : I.lens+'カードを箱へドラッグ　または　カードをタップ→箱をタップ')+'</span>'+
-      (left ? '<span>あと<b class="num">'+left+'</b>枚</span>' : '')+'</div>'+
-    '<div class="deck">'+deck+'</div>'+
+    (left || ui.msg ? '<div class="how"><span class="hw'+(ui.msg?" acc":"")+'" aria-live="polite">'+(ui.msg ? I.bang+esc(ui.msg) : I.lens+'カードを箱へドラッグ　または　カードをタップ→箱をタップ')+'</span>'+
+      (left ? '<span>あと<b class="num">'+left+'</b>枚</span>' : '')+'</div>' : '')+
+    '<div class="deck'+(left ? '' : ' done')+'">'+deck+'</div>'+
     '<div class="bins">'+bins+'</div></div>';
 }
 function bindSort(root, def, placed, onDone){
@@ -1139,7 +1146,7 @@ S.P5 = function(c){
   var fb = "";
   if (d.solved) fb = '<div class="truth"><div class="tt">'+I.check+'真相</div><div>'+esc(c.truth)+'</div></div>';
   else if (last >= 0) fb = '<div class="hint"><span class="acc">'+I.bang+'</span><span>ちょっとちがうみたい。ヒント：'+esc(c.choices[last].hint)+'</span></div>';
-  var html = '<div class="scr"><div class="h2">真相はどれ？</div>'+qcardHTML(c, true)+
+  var html = '<div class="scr"><div class="h2">真相はどれ？</div>'+qcardHTML(c, !d.solved)+
     '<div class="grow"><div class="p5grid">'+
       '<div class="mini-clues"><div class="rhead" style="border:0;background:none;padding:0">開いた手がかり</div>'+
         (opened.length ? opened.map(function(cl,i){ return '<div>'+CIRC[i]+' '+esc(cl.text)+'</div>'; }).join("") : '<div class="note">手がかりはまだ開いていません</div>')+'</div>'+
@@ -1320,7 +1327,21 @@ var PHONE_MQ = window.matchMedia ? window.matchMedia("(max-width: 599px), (max-h
 function isPhone(){ return !!(PHONE_MQ && PHONE_MQ.matches); }
 var lastView = "";
 // 金額・数字だけの文字は大きく（48px基準）：データ由来の文字にも自動で付ける
-var NUMONLY = /^[0-9０-９,，\s＋－−＝×÷+\-=円個点回％%\/]+$/, HASDIGIT = /[0-9０-９]/;
+var NUMONLY = /^[0-9０-９,，\s\u200b＋－−＝×÷+\-=円個点回％%\/]+$/, HASDIGIT = /[0-9０-９]/;
+// 日本語を文節の切れ目だけで改行させる（data/phrases.js の表で、切れ目にゼロ幅スペースを入れる）
+var PHR = window.PHRASES || {}, PHR_KEYS = Object.keys(PHR).filter(function(k){ return k.length >= 6; }).sort(function(a,b){ return b.length - a.length; });
+function wrapJa(root){
+  var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null), list = [], n;
+  while ((n = w.nextNode())) list.push(n);
+  list.forEach(function(t){
+    var v = t.nodeValue, k = v.trim();
+    if (k.length < 4 || v.indexOf("\u200b") >= 0 || (t.parentNode && t.parentNode.closest("svg,script,style"))) return;
+    if (PHR[k]){ t.nodeValue = v.replace(k, PHR[k]); return; }
+    // 文の一部（数字などと組み合わさった文字）は、表の文を含んでいればそこだけ置きかえる
+    for (var i=0;i<PHR_KEYS.length;i++){ var key = PHR_KEYS[i]; if (v.indexOf(key) >= 0) v = v.split(key).join(PHR[key]); }
+    if (v !== t.nodeValue) t.nodeValue = v;
+  });
+}
 function markNums(root){
   $$("*", root).forEach(function(el){
     if (el.closest("svg") || el.classList.contains("num")) return;
@@ -1340,6 +1361,9 @@ function fit(){
     if (s.scrollHeight > s.clientHeight + 1 || s.scrollWidth > s.clientWidth + 1) return true;
     var sr = s.getBoundingClientRect(), k = s.children;
     for (var i=0;i<k.length;i++){ var b = k[i].getBoundingClientRect(); if (b.top < sr.top - 0.5 || b.bottom > sr.bottom + 0.5) return true; }
+    // 中央寄せの中身が .grow からはみ出して、上下の要素に重なっていないか
+    var g = s.querySelector(".grow");
+    if (g && g.firstElementChild){ var gr = g.getBoundingClientRect(), cr = g.firstElementChild.getBoundingClientRect(); if (cr.top < gr.top - 0.5 || cr.bottom > gr.bottom + 0.5) return true; }
     return false;
   }
   while (over() && f > 0.55 && guard++ < 20){
@@ -1358,6 +1382,7 @@ function render(){
   }
   stage.innerHTML = out.html;
   if (out.bind) out.bind(stage);
+  wrapJa(stage);
   markNums(stage);
   fit();
   // 画面（または P6 の段階・F2 の表示）が変わったら、スクロールを先頭にもどす（スマホは縦スクロールするため）
